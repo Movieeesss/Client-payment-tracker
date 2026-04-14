@@ -244,7 +244,7 @@ const PaymentTracker: React.FC = () => {
             display: flex; justify-content: space-between; align-items: flex-start;
             flex-shrink: 0;
           }
-          .p-logo { width: 70mm; height: 16mm; object-fit: contain; }
+          .p-logo { width: 30mm; height: 17mm; object-fit: contain; }
           .p-co-block { flex: 1; padding-left: 5mm; }
           .p-co-name { font-size: 17pt; font-weight: 900; color: #0f172a !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
           .p-co-sub { font-size: 7pt; color: #64748b !important; line-height: 1.5; margin-top: 1mm; }
@@ -425,10 +425,6 @@ const PaymentTracker: React.FC = () => {
               </div>
               <span className="qr-lbl">Scan to Pay</span>
             </div>
-            <div className="sign-col">
-              <div className="sign-line" />
-              <span className="sign-lbl">Authorized Sign</span>
-            </div>
           </div>
           <p className="footer-note">*Please verify drawings and dimensions before execution.</p>
           <p className="footer-thanks">Thank you for choosing {companyName}</p>
@@ -549,10 +545,6 @@ const PaymentTracker: React.FC = () => {
               <span className="p-qr-lbl">Scan to Pay</span>
             </div>
           )}
-          <div className="p-sign-col">
-            <div className="p-sign-line" />
-            <span className="p-sign-lbl">Authorized Sign</span>
-          </div>
         </div>
 
         {/* Bottom Strip */}
