@@ -249,9 +249,9 @@ const PaymentTracker: React.FC = () => {
           .p-co-name { font-size: 17pt; font-weight: 900; color: #0f172a !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
           .p-co-sub { font-size: 7pt; color: #0f172a !important; line-height: 1.5; margin-top: 1mm; }
           .p-inv-block { text-align: right; }
-          .p-inv-label { font-size: 12pt; font-weight: 900; color: #0f172a !important; letter-spacing: 0.2em; text-transform: uppercase; }
-          .p-inv-no { font-size: 11pt; font-weight: 900; color: #0f172a !important; margin-top: 1mm; }
-          .p-inv-date { font-size: 7.5pt; color: #0f172a !important; margin-top: 1mm; }
+          .p-inv-label { font-size: 12pt; font-weight: 900; color: #2563eb !important; letter-spacing: 0.2em; text-transform: uppercase; }
+          .p-inv-no { font-size: 11pt; font-weight: 900; color: white !important; margin-top: 1mm; }
+          .p-inv-date { font-size: 7.5pt; color: white !important; margin-top: 1mm; }
 
           /* ─ Print Bill Row ─ */
           .p-bill-row { display: flex; border-bottom: 2pt solid #0f172a; flex-shrink: 0; }
