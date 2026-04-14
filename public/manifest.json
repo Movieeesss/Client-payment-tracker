@@ -1,6 +1,6 @@
 {
-  "name": "Merge PDF",
-  "short_name": "Merge PDF Tool",
+  "name": "Client payment tracker PDF",
+  "short_name": "Client payment tracker Tool",
   "description": "Professional Structural Design Tool",
   "start_url": "/",
   "display": "standalone",
