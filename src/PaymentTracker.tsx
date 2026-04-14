@@ -181,7 +181,7 @@ const PaymentTracker: React.FC = () => {
         .bank-inp { display: block; width: 100%; border: none; outline: none; background: transparent; }
         .bank-nm { font-size: 12px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
         .bank-an { font-size: 10px; font-weight: 700; color: #64748b; }
-        .bank-no { font-size: 10px; color: #94a3b8; font-family: 'Courier New', monospace; letter-spacing: 0.05em; }
+        .bank-no { font-size: 10px; color: #0f172a; font-family: 'Courier New', monospace; letter-spacing: 0.05em; }
         .qr-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .qr-box { width: 68px; height: 68px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
         .qr-box img { width: 100%; height: 100%; object-fit: cover; padding: 3px; }
@@ -301,7 +301,7 @@ const PaymentTracker: React.FC = () => {
           .p-bank-micro { font-size: 7pt; font-weight: 900; color: #2563eb !important; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2mm; }
           .p-bank-name { font-size: 10pt; font-weight: 900; text-transform: uppercase; color: #0f172a; }
           .p-bank-acc { font-size: 8pt; color: #64748b; margin-top: 1mm; }
-          .p-bank-no { font-size: 8pt; color: #94a3b8; font-family: 'Courier New', monospace; }
+          .p-bank-no { font-size: 8pt; color: #0f172a; font-family: 'Courier New', monospace; }
           .p-qr-col { display: flex; flex-direction: column; align-items: center; gap: 2mm; }
           .p-qr-img { width: 22mm; height: 22mm; object-fit: contain; }
           .p-qr-lbl { font-size: 6pt; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
