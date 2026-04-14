@@ -305,6 +305,9 @@ const PaymentTracker: React.FC = () => {
           .p-qr-col { display: flex; flex-direction: column; align-items: center; gap: 2mm; }
           .p-qr-img { width: 22mm; height: 22mm; object-fit: contain; }
           .p-qr-lbl { font-size: 6pt; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+          .p-sign-col { flex: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; padding-top: 8mm; }
+          .p-sign-line { width: 30mm; border-bottom: 1pt solid #cbd5e1; margin-bottom: 2mm; }
+          .p-sign-lbl { font-size: 6.5pt; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
 
           /* ─ Print Bottom Strip ─ */
           .p-strip { background: #0f172a !important; padding: 3mm 12mm; text-align: center; flex-shrink: 0; }
