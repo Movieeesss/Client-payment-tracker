@@ -122,7 +122,7 @@ const PaymentTracker: React.FC = () => {
         }
         .inv-top-left { flex: 1; min-width: 0; }
         .logo-btn {
-          width: 88px; height: 52px; background: rgba(255,255,255,0.08);
+          width: 150px; height: 85px; background: rgba(255,255,255,0.08);
           border: 2px dashed rgba(255,255,255,0.25); border-radius: 10px;
           display: flex; flex-direction: column; align-items: center; justify-content: center;
           cursor: pointer; margin-bottom: 10px; overflow: hidden;
@@ -130,7 +130,7 @@ const PaymentTracker: React.FC = () => {
         .logo-btn img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
         .co-name { font-size: 20px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em; background: transparent; border: none; outline: none; width: 100%; display: block; line-height: 1.15; }
         .co-sub { font-size: 9.5px; font-weight: 600; color: ##64748b; background: transparent; border: none; outline: none; width: 100%; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .inv-label-input { font-size: 11px; font-weight: 900; color: #2563eb; letter-spacing: 0.18em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
+        .inv-label-input { font-size: 20px; font-weight: 900; color: #2563eb; letter-spacing: 0.18em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
 
         .bill-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #0f172a; }
         .bill-to-cell { padding: 10px 14px; border-right: 2px solid #0f172a; background: #f8fafc; }
@@ -239,19 +239,19 @@ const PaymentTracker: React.FC = () => {
 
           /* ─ Print Header ─ */
           .p-header {
-            background: #0f172a !important;
+            background: #ffffff !important;
             padding: 10mm 12mm 8mm;
             display: flex; justify-content: space-between; align-items: flex-start;
             flex-shrink: 0;
           }
           .p-logo { width: 26mm; height: 16mm; object-fit: contain; }
           .p-co-block { flex: 1; padding-left: 5mm; }
-          .p-co-name { font-size: 17pt; font-weight: 900; color: white !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
-          .p-co-sub { font-size: 7pt; color: rgba(255,255,255,0.55) !important; line-height: 1.5; margin-top: 1mm; }
+          .p-co-name { font-size: 17pt; font-weight: 900; color: #0f172a !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
+          .p-co-sub { font-size: 7pt; color: #64748b !important; line-height: 1.5; margin-top: 1mm; }
           .p-inv-block { text-align: right; }
-          .p-inv-label { font-size: 8.5pt; font-weight: 900; color: #60a5fa !important; letter-spacing: 0.2em; text-transform: uppercase; }
+          .p-inv-label { font-size: 8.5pt; font-weight: 900; color: #2563eb !important; letter-spacing: 0.2em; text-transform: uppercase; }
           .p-inv-no { font-size: 11pt; font-weight: 900; color: white !important; margin-top: 1mm; }
-          .p-inv-date { font-size: 7.5pt; color: rgba(255,255,255,0.6) !important; margin-top: 1mm; }
+          .p-inv-date { font-size: 7.5pt; color: #0f172a !important; margin-top: 1mm; }
 
           /* ─ Print Bill Row ─ */
           .p-bill-row { display: flex; border-bottom: 2pt solid #0f172a; flex-shrink: 0; }
