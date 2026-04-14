@@ -244,7 +244,7 @@ const PaymentTracker: React.FC = () => {
             display: flex; justify-content: space-between; align-items: flex-start;
             flex-shrink: 0;
           }
-          .p-logo { width: 150mm; height: 75mm; object-fit: contain; }
+          .p-logo { width: 75mm; height: 30mm; object-fit: contain; }
           .p-co-block { flex: 1; padding-left: 5mm; }
           .p-co-name { font-size: 17pt; font-weight: 900; color: #0f172a !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
           .p-co-sub { font-size: 7pt; color: #64748b !important; line-height: 1.5; margin-top: 1mm; }
