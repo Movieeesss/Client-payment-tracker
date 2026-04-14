@@ -244,12 +244,12 @@ const PaymentTracker: React.FC = () => {
             display: flex; justify-content: space-between; align-items: flex-start;
             flex-shrink: 0;
           }
-          .p-logo { width: 26mm; height: 16mm; object-fit: contain; }
+          .p-logo { width: 150mm; height: 75mm; object-fit: contain; }
           .p-co-block { flex: 1; padding-left: 5mm; }
           .p-co-name { font-size: 17pt; font-weight: 900; color: #0f172a !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
           .p-co-sub { font-size: 7pt; color: #64748b !important; line-height: 1.5; margin-top: 1mm; }
           .p-inv-block { text-align: right; }
-          .p-inv-label { font-size: 8.5pt; font-weight: 900; color: #2563eb !important; letter-spacing: 0.2em; text-transform: uppercase; }
+          .p-inv-label { font-size: 12pt; font-weight: 900; color: #2563eb !important; letter-spacing: 0.2em; text-transform: uppercase; }
           .p-inv-no { font-size: 11pt; font-weight: 900; color: white !important; margin-top: 1mm; }
           .p-inv-date { font-size: 7.5pt; color: #0f172a !important; margin-top: 1mm; }
 
