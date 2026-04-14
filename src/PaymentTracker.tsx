@@ -102,7 +102,7 @@ const PaymentTracker: React.FC = () => {
 
         @media print {
           @page { size: A4 portrait; margin: 0; }
-          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden !important; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible !important; }
           .no-print { display: none !important; }
           .print-show { display: block !important; }
           .invoice-card {
@@ -202,7 +202,7 @@ const PaymentTracker: React.FC = () => {
       `}</style>
 
       <div className="invoice-card">
-        {/* HEADER */}
+        {/* HEADER AREA - WHITE BACKGROUND FIXED */}
         <div className="inv-header">
           <div className="inv-header-left">
             <input className="company-name-input" value={companyName} onChange={e => setCompanyName(e.target.value)} />
@@ -285,7 +285,7 @@ const PaymentTracker: React.FC = () => {
           </div>
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER AREA */}
         <div className="inv-footer">
           <div className="footer-top">
             <div style={{ flex: 1 }}>
@@ -309,10 +309,10 @@ const PaymentTracker: React.FC = () => {
         {/* ACTIONS */}
         <div className="action-bar no-print">
           <div className="action-row">
-            <button className="btn-print" onClick={() => window.print()}><Download size={16} /> PRINT PDF</button>
-            <button className="btn-share" onClick={onShare}><Share2 size={16} /> SHARE</button>
+            <button className="btn btn-print" onClick={() => window.print()}><Download size={16} /> PRINT PDF</button>
+            <button className="btn btn-share" onClick={onShare}><Share2 size={16} /> SHARE</button>
           </div>
-          <button className="btn-reset" onClick={handleReset}><RotateCcw size={16} /> RESET</button>
+          <button className="btn btn-reset" onClick={handleReset}><RotateCcw size={16} /> RESET</button>
         </div>
       </div>
       <p className="footer-brand no-print">Uniq Designs AI Terminal</p>
