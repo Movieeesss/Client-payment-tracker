@@ -128,9 +128,9 @@ const PaymentTracker: React.FC = () => {
           cursor: pointer; margin-bottom: 10px; overflow: hidden;
         }
         .logo-btn img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
-        .co-name { font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.04em; background: transparent; border: none; outline: none; width: 100%; display: block; line-height: 1.15; }
-        .co-sub { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,0.55); background: transparent; border: none; outline: none; width: 100%; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .inv-label-input { font-size: 11px; font-weight: 900; color: #60a5fa; letter-spacing: 0.18em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
+        .co-name { font-size: 20px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em; background: transparent; border: none; outline: none; width: 100%; display: block; line-height: 1.15; }
+        .co-sub { font-size: 9.5px; font-weight: 600; color: ##64748b; background: transparent; border: none; outline: none; width: 100%; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .inv-label-input { font-size: 11px; font-weight: 900; color: #2563eb; letter-spacing: 0.18em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
 
         .bill-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #0f172a; }
         .bill-to-cell { padding: 10px 14px; border-right: 2px solid #0f172a; background: #f8fafc; }
