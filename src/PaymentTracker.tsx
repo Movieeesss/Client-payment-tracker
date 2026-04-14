@@ -18,8 +18,8 @@ const PaymentTracker: React.FC = () => {
     try { return JSON.parse(s); } catch { return s; }
   };
 
-  const [logo, setLogo] = useState<string | null>(() => localStorage.getItem('p_logo'));
-  const [qrCode, setQrCode] = useState<string | null>(() => localStorage.getItem('p_qr'));
+  const [logo, setLogo] = useState<string | null>(() => getSaved('p_logo', null));
+  const [qrCode, setQrCode] = useState<string | null>(() => getSaved('p_qr', null));
 
   const [invoiceLabel, setInvoiceLabel] = useState(() => getSaved('p_label', 'INVOICE'));
   const [advanceLabel, setAdvanceLabel] = useState(() => getSaved('p_adv_lbl', 'ADVANCE PAID'));
@@ -50,13 +50,15 @@ const PaymentTracker: React.FC = () => {
     Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     if (logo) localStorage.setItem('p_logo', logo);
     if (qrCode) localStorage.setItem('p_qr', qrCode);
-  }, [logo, qrCode, invoiceLabel, advanceLabel, snoLabel, qtyLabel, rateLabel, amtLabel, companyName, engineerName, address, clientName, invoiceNo, invoiceDate, advanceInput, rows, bankName, accName, accNo]);
+  }, [logo, qrCode, invoiceLabel, advanceLabel, snoLabel, qtyLabel, rateLabel, amtLabel,
+    companyName, engineerName, address, clientName, invoiceNo, invoiceDate,
+    advanceInput, rows, bankName, accName, accNo]);
 
   const logoRef = useRef<HTMLInputElement>(null);
   const qrRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
-    if (window.confirm("Invoice data reset panna ok-va?")) {
+    if (window.confirm('Invoice data reset panna ok-va?')) {
       localStorage.clear();
       window.location.reload();
     }
@@ -73,15 +75,20 @@ const PaymentTracker: React.FC = () => {
 
   const updateRow = useCallback((id: number, field: keyof PaymentRow, value: string) => {
     setRows(prev => prev.map(row =>
-      row.id === id ? { ...row, [field]: (field === 'quantity' || field === 'rate') ? (value === '' ? '' : parseFloat(value) || '') : value } : row
+      row.id === id
+        ? { ...row, [field]: (field === 'quantity' || field === 'rate') ? (value === '' ? '' : parseFloat(value) || '') : value }
+        : row
     ));
   }, []);
 
-  const totalAmount = useMemo(() => rows.reduce((s, r) => s + ((Number(r.quantity) || 0) * (Number(r.rate) || 0)), 0), [rows]);
+  const totalAmount = useMemo(() =>
+    rows.reduce((s, r) => s + ((Number(r.quantity) || 0) * (Number(r.rate) || 0)), 0),
+    [rows]
+  );
   const balance = totalAmount - (Number(advanceInput) || 0);
 
   const onShare = async () => {
-    const text = `*Invoice: ${companyName}*\nTotal: ₹${totalAmount.toLocaleString()}\nBalance: ₹${balance.toLocaleString()}`;
+    const text = `*Invoice: ${companyName}*\nInvoice No: ${invoiceNo}\nTotal: ₹${totalAmount.toLocaleString()}\nAdvance: ₹${Number(advanceInput).toLocaleString()}\nBalance Due: ₹${balance.toLocaleString()}`;
     if (navigator.share) await navigator.share({ title: 'Invoice', text });
     else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -95,227 +102,466 @@ const PaymentTracker: React.FC = () => {
   };
 
   return (
-    <div style={{ margin: 0, padding: 0, background: '#f1f5f9', minHeight: '100vh', fontFamily: 'sans-serif' }}>
+    <div id="app-root">
       <style>{`
-        * { box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; overflow-x: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
 
-        @media print {
-          @page { size: A4 portrait; margin: 0; }
-          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible !important; }
-          .no-print { display: none !important; }
-          .print-show { display: block !important; }
-          .invoice-card {
-            width: 210mm !important; 
-            height: 297mm !important; 
-            margin: 0 !important; 
-            padding: 10mm !important;
-            border-radius: 0 !important;
-            box-shadow: none !important; 
-            border: none !important;
-            transform: scale(1);
-            transform-origin: top center;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          .inv-footer { margin-top: auto !important; padding-bottom: 5mm !important; }
+        /* ── SCREEN ── */
+        #app-root { background: #e2e8f0; min-height: 100vh; padding-bottom: 32px; }
+        .screen-card { width: 100%; max-width: 480px; margin: 0 auto; background: #fff; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
+        @media (min-width: 500px) {
+          #app-root { padding: 24px 0 48px; }
+          .screen-card { border-radius: 18px; overflow: hidden; }
         }
 
-        .invoice-card {
-          width: 100%;
-          max-width: 520px;
-          margin: 0 auto;
-          background: white;
-          box-shadow: 0 4px 32px rgba(0,0,0,0.10);
-          position: relative;
+        .inv-top-band {
+          background: #ffffff; /* Idhu dhaan Vellai color coding */
+          padding: 18px 18px 14px;
+          display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
         }
-
-        @media (min-width: 640px) {
-          .invoice-card {
-            margin: 24px auto;
-            border-radius: 20px;
-            overflow: hidden;
-          }
+        .inv-top-left { flex: 1; min-width: 0; }
+        .logo-btn {
+          width: 88px; height: 52px; background: rgba(255,255,255,0.08);
+          border: 2px dashed rgba(255,255,255,0.25); border-radius: 10px;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          cursor: pointer; margin-bottom: 10px; overflow: hidden;
         }
+        .logo-btn img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+        .co-name { font-size: 20px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.04em; background: transparent; border: none; outline: none; width: 100%; display: block; line-height: 1.15; }
+        .co-sub { font-size: 9.5px; font-weight: 600; color: rgba(255,255,255,0.55); background: transparent; border: none; outline: none; width: 100%; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .inv-label-input { font-size: 11px; font-weight: 900; color: #60a5fa; letter-spacing: 0.18em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
 
-        .inv-header { padding: 16px 16px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; background: #ffffff; }
-        .inv-header-left { flex: 1; min-width: 0; }
-        .logo-upload { width: 90px; height: 56px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 8px; overflow: hidden; }
-        .logo-upload img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
-        .company-name-input { display: block; width: 100%; font-size: 18px; font-weight: 900; text-transform: uppercase; color: #0f172a; border: none; outline: none; background: transparent; line-height: 1.2; }
-        .sub-input { display: block; width: 100%; font-size: 10px; font-weight: 700; color: #64748b; border: none; outline: none; background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        
-        .inv-right-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .invoice-label-input { font-size: 14px; font-weight: 900; color: #0f172a; letter-spacing: 0.1em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 100px; }
-        .logo-box-right { width: 120px; height: 65px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
-        .logo-box-right img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
-
-        .bill-info { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; }
-        .bill-to { padding: 10px 12px; border-right: 2px solid #0f172a; background: #f8fafc; }
-        .bill-details { padding: 10px 12px; }
-        .bill-label { font-size: 9px; font-weight: 900; color: #2563eb; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
-        .inv-details-label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-        .inv-details-value { font-size: 10px; font-weight: 900; color: #0f172a; border: none; outline: none; background: transparent; text-align: right; width: 100%; }
-        .inv-details-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .client-input { width: 100%; font-size: 14px; font-weight: 700; color: #0f172a; border: none; outline: none; background: transparent; }
+        .bill-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 2px solid #0f172a; }
+        .bill-to-cell { padding: 10px 14px; border-right: 2px solid #0f172a; background: #f8fafc; }
+        .bill-details-cell { padding: 10px 14px; }
+        .cell-micro { font-size: 8.5px; font-weight: 900; color: #2563eb; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 5px; }
+        .client-inp { font-size: 14px; font-weight: 800; color: #0f172a; background: transparent; border: none; outline: none; width: 100%; }
+        .det-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .det-lbl { font-size: 8.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+        .det-val { font-size: 10px; font-weight: 900; color: #0f172a; background: transparent; border: none; outline: none; text-align: right; }
 
         .inv-table { width: 100%; border-collapse: collapse; }
-        .inv-table thead tr { background: #0f172a; color: white; }
-        .inv-table th { padding: 8px 4px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
+        .inv-table thead tr { background: #0f172a; }
+        .inv-table th { padding: 9px 5px; font-size: 8.5px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: 0.06em; }
         .inv-table th input { background: transparent; color: white; border: none; outline: none; font-weight: 900; font-size: 8.5px; text-transform: uppercase; width: 100%; text-align: center; }
-        .inv-table td { padding: 10px 4px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .inv-table tbody tr { border-bottom: 1px solid #f1f5f9; }
+        .inv-table tbody tr:nth-child(even) { background: #fafbfc; }
+        .inv-table td { padding: 10px 5px; font-size: 11px; }
         .inv-table td input { border: none; outline: none; background: transparent; font-size: 11px; width: 100%; }
-        .col-sno { width: 28px; text-align: center; }
-        .col-qty { width: 42px; text-align: center; }
-        .col-rate { width: 44px; text-align: center; }
-        .col-amt { width: 64px; text-align: right; padding-right: 8px !important; }
-        .add-item-btn { padding: 10px 12px; color: #2563eb; font-weight: 900; font-size: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; letter-spacing: 0.05em; }
+        .th-sno { width: 30px; text-align: center; }
+        .th-desc { text-align: left; padding-left: 10px !important; }
+        .th-qty { width: 44px; }
+        .th-rate { width: 48px; }
+        .th-amt { width: 68px; text-align: right; padding-right: 10px !important; }
+        .td-sno { text-align: center; color: #cbd5e1; font-weight: 800; }
+        .td-desc { padding-left: 10px !important; }
+        .td-qty { text-align: center; }
+        .td-rate { text-align: center; }
+        .td-amt { text-align: right; font-weight: 900; padding-right: 10px !important; color: #0f172a; }
+        .add-row-btn { display: flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 9.5px; font-weight: 900; color: #2563eb; text-transform: uppercase; letter-spacing: 0.08em; background: none; border: none; cursor: pointer; }
 
-        .totals-section { padding: 14px 16px; background: #f8fafc; }
-        .grand-total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 10px; }
-        .gt-label { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; }
-        .gt-value { font-size: 20px; font-weight: 900; color: #0f172a; }
-        .advance-box { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 10px; }
-        .adv-label-input { font-size: 10px; font-weight: 900; color: #10b981; background: transparent; border: none; outline: none; text-transform: uppercase; width: 130px; }
-        .adv-value-wrap { display: flex; align-items: center; gap: 2px; }
-        .adv-value-input { font-size: 18px; font-weight: 900; color: #10b981; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
-        .balance-box { background: #0f172a; color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(15,23,42,0.3); }
-        .bal-label { font-size: 10px; font-weight: 900; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.12em; }
-        .bal-value { font-size: 28px; font-weight: 900; font-family: monospace; }
+        .totals-wrap { padding: 14px 16px 12px; background: #f8fafc; }
+        .total-line { display: flex; justify-content: space-between; align-items: center; padding: 5px 2px; border-bottom: 1px dashed #e2e8f0; margin-bottom: 8px; }
+        .total-line-lbl { font-size: 9.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        .total-line-val { font-size: 18px; font-weight: 900; color: #0f172a; }
+        .advance-pill { display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 10px 16px; margin-bottom: 10px; }
+        .adv-lbl-inp { font-size: 9.5px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 0.08em; background: transparent; border: none; outline: none; width: 130px; }
+        .adv-val-wrap { display: flex; align-items: center; gap: 3px; }
+        .adv-symbol { font-size: 11px; color: #059669; opacity: 0.6; font-weight: 700; }
+        .adv-val-inp { font-size: 20px; font-weight: 900; color: #059669; background: transparent; border: none; outline: none; text-align: right; width: 90px; }
+        .balance-card { background: linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%); border-radius: 14px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 6px 24px rgba(15,23,42,0.28); }
+        .bal-lbl { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.15em; }
+        .bal-val { font-size: 30px; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
 
-        .inv-footer { padding: 16px; border-top: 1px solid #f1f5f9; }
-        .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .bank-label { font-size: 9px; font-weight: 900; color: #2563eb; text-transform: uppercase; display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
-        .bank-input { display: block; width: 100%; border: none; outline: none; background: transparent; font-size: 10px; }
-        .bank-name { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
-        .qr-box { width: 60px; height: 60px; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
-        .qr-box img { width: 100%; height: 100%; object-fit: cover; }
-        .thanks-text { font-size: 11px; font-weight: 900; color: #0f172a; text-transform: uppercase; width: 130px; line-height: 1.2; text-align: right; }
+        .inv-footer { padding: 14px 16px 16px; border-top: 1.5px solid #e2e8f0; }
+        .footer-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+        .bank-col { flex: 1; }
+        .bank-micro { font-size: 8.5px; font-weight: 900; color: #2563eb; text-transform: uppercase; letter-spacing: 0.12em; display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+        .bank-inp { display: block; width: 100%; border: none; outline: none; background: transparent; }
+        .bank-nm { font-size: 12px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
+        .bank-an { font-size: 10px; font-weight: 700; color: #64748b; }
+        .bank-no { font-size: 10px; color: #94a3b8; font-family: 'Courier New', monospace; letter-spacing: 0.05em; }
+        .qr-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .qr-box { width: 68px; height: 68px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+        .qr-box img { width: 100%; height: 100%; object-fit: cover; padding: 3px; }
+        .qr-lbl { font-size: 7.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        .sign-col { flex: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; padding-top: 28px; }
+        .sign-line { width: 80px; border-bottom: 1.5px solid #cbd5e1; margin-bottom: 4px; }
+        .sign-lbl { font-size: 8px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+        .footer-note { text-align: center; font-size: 8.5px; color: #94a3b8; font-style: italic; line-height: 1.5; margin-bottom: 4px; }
+        .footer-thanks { text-align: center; font-size: 9.5px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.1em; }
 
-        .action-bar { padding: 12px 16px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
+        .action-bar { padding: 12px 16px 20px; background: #f1f5f9; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
         .action-row { display: flex; gap: 10px; }
-        .btn-print, .btn-share { flex: 1; color: white; padding: 14px 8px; border-radius: 14px; font-weight: 900; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; }
-        .btn-print { background: #0f172a; } .btn-share { background: #10b981; }
-        .btn-reset { width: 100%; background: white; color: #ef4444; padding: 12px; border-radius: 14px; font-weight: 900; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #fee2e2; cursor: pointer; }
-        .footer-brand { text-align: center; padding: 16px 0 24px; font-size: 8px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.4em; }
+        .btn { border: none; cursor: pointer; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 13px; padding: 14px 10px; -webkit-tap-highlight-color: transparent; }
+        .btn-print { flex: 1; background: #0f172a; color: white; }
+        .btn-share { flex: 1; background: #10b981; color: white; }
+        .btn-reset { width: 100%; background: white; color: #ef4444; border: 1.5px solid #fecaca !important; }
+        .brand-foot { text-align: center; padding: 14px 0 8px; font-size: 7.5px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.4em; }
+
+        /* ══════════════════════════════════════════
+           PRINT — FORCES SINGLE A4 PAGE
+           The .print-page div is hidden on screen,
+           shown only when printing. All screen UI
+           is hidden via .no-print.
+        ══════════════════════════════════════════ */
+        @media print {
+          @page { size: A4 portrait; margin: 0; }
+
+          html, body {
+            width: 210mm; height: 297mm;
+            overflow: hidden;
+            background: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          #app-root { background: white !important; padding: 0 !important; min-height: unset !important; }
+          .screen-card { display: none !important; }
+          .brand-foot { display: none !important; }
+          .no-print { display: none !important; }
+
+          /* Show the dedicated print sheet */
+          .print-page {
+            display: flex !important;
+            flex-direction: column;
+            width: 210mm;
+            height: 297mm;
+            overflow: hidden;
+            position: fixed;
+            top: 0; left: 0;
+            background: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+          }
+
+          /* ─ Print Header ─ */
+          .p-header {
+            background: #0f172a !important;
+            padding: 10mm 12mm 8mm;
+            display: flex; justify-content: space-between; align-items: flex-start;
+            flex-shrink: 0;
+          }
+          .p-logo { width: 26mm; height: 16mm; object-fit: contain; }
+          .p-co-block { flex: 1; padding-left: 5mm; }
+          .p-co-name { font-size: 17pt; font-weight: 900; color: white !important; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.1; }
+          .p-co-sub { font-size: 7pt; color: rgba(255,255,255,0.55) !important; line-height: 1.5; margin-top: 1mm; }
+          .p-inv-block { text-align: right; }
+          .p-inv-label { font-size: 8.5pt; font-weight: 900; color: #60a5fa !important; letter-spacing: 0.2em; text-transform: uppercase; }
+          .p-inv-no { font-size: 11pt; font-weight: 900; color: white !important; margin-top: 1mm; }
+          .p-inv-date { font-size: 7.5pt; color: rgba(255,255,255,0.6) !important; margin-top: 1mm; }
+
+          /* ─ Print Bill Row ─ */
+          .p-bill-row { display: flex; border-bottom: 2pt solid #0f172a; flex-shrink: 0; }
+          .p-bill-to { flex: 1; padding: 5mm 10mm; border-right: 2pt solid #0f172a; background: #f8fafc !important; }
+          .p-bill-right { flex: 1; padding: 5mm 10mm; display: flex; flex-direction: column; justify-content: center; }
+          .p-bill-micro { font-size: 7pt; font-weight: 900; color: #2563eb !important; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2mm; }
+          .p-client-name { font-size: 13pt; font-weight: 800; color: #0f172a; }
+          .p-det-row { display: flex; justify-content: space-between; margin-bottom: 2mm; }
+          .p-det-lbl { font-size: 7pt; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+          .p-det-val { font-size: 8pt; font-weight: 900; color: #0f172a; }
+
+          /* ─ Print Table ─ */
+          .p-table { width: 100%; border-collapse: collapse; flex-shrink: 0; }
+          .p-table thead tr { background: #0f172a !important; }
+          .p-table th { padding: 3mm 3mm; font-size: 7.5pt; font-weight: 900; color: white !important; text-transform: uppercase; letter-spacing: 0.06em; }
+          .p-table td { padding: 3.5mm 3mm; font-size: 9pt; border-bottom: 0.5pt solid #e2e8f0; }
+          .p-table tbody tr:nth-child(even) td { background: #fafbfc !important; }
+          .p-th-sno { width: 8mm; text-align: center; }
+          .p-th-desc { text-align: left; padding-left: 5mm !important; }
+          .p-th-qty { width: 14mm; text-align: center; }
+          .p-th-rate { width: 18mm; text-align: center; }
+          .p-th-amt { width: 28mm; text-align: right; padding-right: 5mm !important; }
+          .p-td-sno { text-align: center; color: #cbd5e1; font-weight: 800; }
+          .p-td-desc { padding-left: 5mm !important; font-weight: 700; }
+          .p-td-qty { text-align: center; }
+          .p-td-rate { text-align: center; font-weight: 700; color: #2563eb !important; }
+          .p-td-amt { text-align: right; font-weight: 900; padding-right: 5mm !important; }
+
+          /* ─ Print Totals ─ */
+          .p-totals { padding: 5mm 12mm; background: #f8fafc !important; flex-shrink: 0; }
+          .p-grand-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 3mm; border-bottom: 0.5pt dashed #cbd5e1; margin-bottom: 4mm; }
+          .p-grand-lbl { font-size: 7.5pt; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+          .p-grand-val { font-size: 15pt; font-weight: 900; color: #0f172a; }
+          .p-adv-row { display: flex; justify-content: space-between; align-items: center; background: #ecfdf5 !important; border: 1pt solid #6ee7b7; border-radius: 2.5mm; padding: 3mm 5mm; margin-bottom: 4mm; }
+          .p-adv-lbl { font-size: 7.5pt; font-weight: 900; color: #059669 !important; text-transform: uppercase; letter-spacing: 0.08em; }
+          .p-adv-val { font-size: 14pt; font-weight: 900; color: #059669 !important; }
+          .p-bal-card { background: #0f172a !important; border-radius: 3mm; padding: 5mm 8mm; display: flex; justify-content: space-between; align-items: center; }
+          .p-bal-lbl { font-size: 7.5pt; font-weight: 900; color: rgba(255,255,255,0.45) !important; text-transform: uppercase; letter-spacing: 0.15em; }
+          .p-bal-val { font-size: 22pt; font-weight: 900; color: white !important; }
+
+          /* ─ Spacer pushes footer to bottom ─ */
+          .p-spacer { flex: 1; }
+
+          /* ─ Print Footer ─ */
+          .p-footer { padding: 5mm 12mm; border-top: 1pt solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-start; gap: 8mm; flex-shrink: 0; }
+          .p-bank-col { flex: 1; }
+          .p-bank-micro { font-size: 7pt; font-weight: 900; color: #2563eb !important; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2mm; }
+          .p-bank-name { font-size: 10pt; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+          .p-bank-acc { font-size: 8pt; color: #64748b; margin-top: 1mm; }
+          .p-bank-no { font-size: 8pt; color: #94a3b8; font-family: 'Courier New', monospace; }
+          .p-qr-col { display: flex; flex-direction: column; align-items: center; gap: 2mm; }
+          .p-qr-img { width: 22mm; height: 22mm; object-fit: contain; }
+          .p-qr-lbl { font-size: 6pt; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+          .p-sign-col { flex: 1; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; padding-top: 8mm; }
+          .p-sign-line { width: 30mm; border-bottom: 1pt solid #cbd5e1; margin-bottom: 2mm; }
+          .p-sign-lbl { font-size: 6.5pt; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+
+          /* ─ Print Bottom Strip ─ */
+          .p-strip { background: #0f172a !important; padding: 3mm 12mm; text-align: center; flex-shrink: 0; }
+          .p-strip-note { font-size: 7pt; color: rgba(255,255,255,0.5) !important; font-style: italic; }
+          .p-strip-thanks { font-size: 8pt; font-weight: 900; color: white !important; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 1mm; }
+        }
       `}</style>
 
-      <div className="invoice-card">
-        {/* HEADER AREA - WHITE BACKGROUND FIXED */}
-        <div className="inv-header">
-          <div className="inv-header-left">
-            <input className="company-name-input" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-            <input className="sub-input" value={engineerName} onChange={e => setEngineerName(e.target.value)} />
-            <input className="sub-input" value={address} onChange={e => setAddress(e.target.value)} />
-          </div>
-          <div className="inv-right-block">
-            <input className="invoice-label-input" value={invoiceLabel} onChange={e => setInvoiceLabel(e.target.value)} />
-            <div className="logo-box-right no-print" onClick={() => logoRef.current?.click()}>
-              {logo ? <img src={logo} alt="Logo" /> : <><Camera size={14} color="#cbd5e1" /><span style={{ fontSize: 7, color: '#cbd5e1', fontWeight: 800 }}>LOGO</span></>}
+      {/* ═══════════ SCREEN VIEW ═══════════ */}
+      <div className="screen-card">
+
+        {/* Header Band */}
+        <div className="inv-top-band">
+          <div className="inv-top-left">
+            <div className="logo-btn no-print" onClick={() => logoRef.current?.click()}>
+              {logo ? <img src={logo} alt="Logo" /> : <Camera size={18} color="rgba(255,255,255,0.35)" />}
               <input type="file" ref={logoRef} hidden accept="image/*" onChange={e => handleImage(e, setLogo)} />
             </div>
-            {logo && <div className="logo-box-right print-show" style={{ display: 'none' }}><img src={logo} alt="Logo" /></div>}
+            <input className="co-name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+            <input className="co-sub" value={engineerName} onChange={e => setEngineerName(e.target.value)} />
+            <input className="co-sub" value={address} onChange={e => setAddress(e.target.value)} />
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <input className="inv-label-input" value={invoiceLabel} onChange={e => setInvoiceLabel(e.target.value)} />
           </div>
         </div>
 
-        {/* BILL INFO */}
-        <div className="bill-info">
-          <div className="bill-to">
-            <p className="bill-label">BILL TO</p>
-            <input className="client-input" value={clientName} onChange={e => setClientName(e.target.value)} />
+        {/* Bill Info */}
+        <div className="bill-row">
+          <div className="bill-to-cell">
+            <p className="cell-micro">Bill To</p>
+            <input className="client-inp" value={clientName} onChange={e => setClientName(e.target.value)} />
           </div>
-          <div className="bill-details">
-            <div className="inv-details-row">
-              <span className="inv-details-label">INVOICE NO:</span>
-              <input className="inv-details-value" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} style={{ width: 80 }} />
+          <div className="bill-details-cell">
+            <div className="det-row">
+              <span className="det-lbl">Invoice No:</span>
+              <input className="det-val" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} style={{ width: 80 }} />
             </div>
-            <div className="inv-details-row">
-              <span className="inv-details-label">DATE:</span>
-              <input type="date" className="inv-details-value" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} style={{ width: 100, fontSize: 9 }} />
+            <div className="det-row">
+              <span className="det-lbl">Date:</span>
+              <input type="date" className="det-val" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} style={{ width: 100, fontSize: 9 }} />
             </div>
           </div>
         </div>
 
-        {/* TABLE */}
+        {/* Table */}
         <div style={{ overflowX: 'auto' }}>
           <table className="inv-table">
             <thead>
               <tr>
-                <th className="col-sno"><input value={snoLabel} onChange={e => setSnoLabel(e.target.value)} /></th>
-                <th style={{ textAlign: 'left', paddingLeft: 8 }}>DESCRIPTION</th>
-                <th className="col-qty"><input value={qtyLabel} onChange={e => setQtyLabel(e.target.value)} /></th>
-                <th className="col-rate"><input value={rateLabel} onChange={e => setRateLabel(e.target.value)} /></th>
-                <th className="col-amt"><input value={amtLabel} onChange={e => setAmtLabel(e.target.value)} style={{ textAlign: 'right', color: 'white' }} /></th>
+                <th className="th-sno"><input value={snoLabel} onChange={e => setSnoLabel(e.target.value)} /></th>
+                <th className="th-desc">DESCRIPTION</th>
+                <th className="th-qty"><input value={qtyLabel} onChange={e => setQtyLabel(e.target.value)} /></th>
+                <th className="th-rate"><input value={rateLabel} onChange={e => setRateLabel(e.target.value)} /></th>
+                <th className="th-amt"><input value={amtLabel} onChange={e => setAmtLabel(e.target.value)} style={{ textAlign: 'right', color: 'white' }} /></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
                 <tr key={row.id}>
-                  <td style={{ textAlign: 'center', color: '#cbd5e1', fontWeight: 800 }}>{i + 1}</td>
-                  <td style={{ paddingLeft: 8 }}><input style={{ fontWeight: 700, color: '#334155' }} value={row.description} onChange={e => updateRow(row.id, 'description', e.target.value)} /></td>
-                  <td style={{ textAlign: 'center' }}><input style={{ textAlign: 'center' }} value={row.quantity} onChange={e => updateRow(row.id, 'quantity', e.target.value)} /></td>
-                  <td style={{ textAlign: 'center' }}><input style={{ textAlign: 'center', fontWeight: 700, color: '#2563eb' }} value={row.rate} onChange={e => updateRow(row.id, 'rate', e.target.value)} /></td>
+                  <td className="td-sno">{i + 1}</td>
+                  <td className="td-desc">
+                    <input style={{ fontWeight: 700, color: '#334155' }} value={row.description} onChange={e => updateRow(row.id, 'description', e.target.value)} />
+                  </td>
+                  <td className="td-qty">
+                    <input style={{ textAlign: 'center' }} value={row.quantity} onChange={e => updateRow(row.id, 'quantity', e.target.value)} />
+                  </td>
+                  <td className="td-rate">
+                    <input style={{ textAlign: 'center', fontWeight: 700, color: '#2563eb' }} value={row.rate} onChange={e => updateRow(row.id, 'rate', e.target.value)} />
+                  </td>
                   <td className="td-amt">₹{((Number(row.quantity) || 0) * (Number(row.rate) || 0)).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <button className="add-item-btn no-print" onClick={() => setRows([...rows, { id: Date.now(), description: '', quantity: '', rate: '' }])}>
-            <Plus size={13} /> ADD LINE ITEM
+          <button className="add-row-btn no-print" onClick={() => setRows([...rows, { id: Date.now(), description: '', quantity: '', rate: '' }])}>
+            <Plus size={13} /> Add Line Item
           </button>
         </div>
 
-        {/* TOTALS */}
-        <div className="totals-section">
-          <div className="grand-total-row">
-            <span className="gt-label">Grand Total</span>
-            <span className="gt-value">₹{totalAmount.toLocaleString()}</span>
+        {/* Totals */}
+        <div className="totals-wrap">
+          <div className="total-line">
+            <span className="total-line-lbl">Grand Total</span>
+            <span className="total-line-val">₹{totalAmount.toLocaleString()}</span>
           </div>
-          <div className="advance-box">
-            <input className="adv-label-input" value={advanceLabel} onChange={e => setAdvanceLabel(e.target.value)} />
-            <div className="adv-value-wrap">
-              <span style={{ color: '#10b981', fontSize: 10 }}>₹</span>
-              <input className="adv-value-input" value={advanceInput} onChange={e => setAdvanceInput(e.target.value)} />
+          <div className="advance-pill">
+            <input className="adv-lbl-inp" value={advanceLabel} onChange={e => setAdvanceLabel(e.target.value)} />
+            <div className="adv-val-wrap">
+              <span className="adv-symbol">₹</span>
+              <input className="adv-val-inp" value={advanceInput} onChange={e => setAdvanceInput(e.target.value)} />
             </div>
           </div>
-          <div className="balance-box">
-            <span className="bal-label" style={{ color: 'rgba(255,255,255,0.5)' }}>Balance Due</span>
+          <div className="balance-card">
+            <span className="bal-lbl">Balance Due</span>
             <span className="bal-val">₹{balance.toLocaleString()}</span>
           </div>
         </div>
 
-        {/* FOOTER AREA */}
+        {/* Footer */}
         <div className="inv-footer">
-          <div className="footer-top">
-            <div style={{ flex: 1 }}>
-              <p className="bank-label"><Landmark size={10} /> Bank Info</p>
-              <input className="bank-input bank-name" value={bankName} onChange={e => setBankName(e.target.value)} />
-              <input className="bank-input" style={{ fontWeight: 700, color: '#64748b' }} value={accName} onChange={e => setAccName(e.target.value)} />
-              <input className="bank-input" style={{ color: '#94a3b8', fontFamily: 'monospace' }} value={accNo} onChange={e => setAccNo(e.target.value)} />
+          <div className="footer-cols">
+            <div className="bank-col">
+              <p className="bank-micro"><Landmark size={9} /> Bank Info</p>
+              <input className="bank-inp bank-nm" value={bankName} onChange={e => setBankName(e.target.value)} />
+              <input className="bank-inp bank-an" value={accName} onChange={e => setAccName(e.target.value)} />
+              <input className="bank-inp bank-no" value={accNo} onChange={e => setAccNo(e.target.value)} />
             </div>
             <div className="qr-col">
               <div className="qr-box no-print" onClick={() => qrRef.current?.click()}>
-                {qrCode ? <img src={qrCode} alt="QR" /> : <><QrCode size={16} color="#cbd5e1" /><span style={{ fontSize: 6, color: '#94a3b8', fontWeight: 800 }}>UPI SCAN</span></>}
+                {qrCode
+                  ? <img src={qrCode} alt="QR" />
+                  : <><QrCode size={18} color="#cbd5e1" /><span style={{ fontSize: 7, color: '#94a3b8', fontWeight: 700 }}>QR</span></>}
                 <input type="file" ref={qrRef} hidden accept="image/*" onChange={e => handleImage(e, setQrCode)} />
               </div>
-              {qrCode && <div className="qr-box print-show" style={{ display: 'none' }}><img src={qrCode} alt="QR" /></div>}
-              <div className="thanks-text">THANK YOU FOR CHOOSING {companyName}</div>
+              <span className="qr-lbl">Scan to Pay</span>
+            </div>
+            <div className="sign-col">
+              <div className="sign-line" />
+              <span className="sign-lbl">Authorized Sign</span>
             </div>
           </div>
-          <p className="footer-note" style={{ textAlign: 'center' }}>*Please verify drawings and dimensions before execution.</p>
+          <p className="footer-note">*Please verify drawings and dimensions before execution.</p>
+          <p className="footer-thanks">Thank you for choosing {companyName}</p>
         </div>
 
-        {/* ACTIONS */}
+        {/* Buttons */}
         <div className="action-bar no-print">
           <div className="action-row">
-            <button className="btn btn-print" onClick={() => window.print()}><Download size={16} /> PRINT PDF</button>
-            <button className="btn btn-share" onClick={onShare}><Share2 size={16} /> SHARE</button>
+            <button className="btn btn-print" onClick={() => window.print()}><Download size={15} /> Print PDF</button>
+            <button className="btn btn-share" onClick={onShare}><Share2 size={15} /> Share</button>
           </div>
-          <button className="btn btn-reset" onClick={handleReset}><RotateCcw size={16} /> RESET</button>
+          <button className="btn btn-reset" onClick={handleReset}><RotateCcw size={15} /> Reset</button>
         </div>
       </div>
-      <p className="footer-brand no-print">Uniq Designs AI Terminal</p>
+
+      <p className="brand-foot no-print">Uniq Designs · Invoice System</p>
+
+      {/* ═══════════════════════════════════════════════
+          PRINT-ONLY A4 SINGLE PAGE
+          display:none on screen → display:flex on print
+      ═══════════════════════════════════════════════ */}
+      <div className="print-page" style={{ display: 'none' }}>
+
+        {/* Header */}
+        <div className="p-header">
+          <div>{logo && <img src={logo} alt="Logo" className="p-logo" />}</div>
+          <div className="p-co-block">
+            <div className="p-co-name">{companyName}</div>
+            <div className="p-co-sub">{engineerName}</div>
+            <div className="p-co-sub">{address}</div>
+          </div>
+          <div className="p-inv-block">
+            <div className="p-inv-label">{invoiceLabel}</div>
+            <div className="p-inv-no">{invoiceNo}</div>
+            <div className="p-inv-date">{formatDate(invoiceDate)}</div>
+          </div>
+        </div>
+
+        {/* Bill Row */}
+        <div className="p-bill-row">
+          <div className="p-bill-to">
+            <div className="p-bill-micro">Bill To</div>
+            <div className="p-client-name">{clientName}</div>
+          </div>
+          <div className="p-bill-right">
+            <div className="p-det-row">
+              <span className="p-det-lbl">Invoice No:</span>
+              <span className="p-det-val">{invoiceNo}</span>
+            </div>
+            <div className="p-det-row">
+              <span className="p-det-lbl">Date:</span>
+              <span className="p-det-val">{formatDate(invoiceDate)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Table */}
+        <table className="p-table">
+          <thead>
+            <tr>
+              <th className="p-th-sno">{snoLabel}</th>
+              <th className="p-th-desc">Description</th>
+              <th className="p-th-qty">{qtyLabel}</th>
+              <th className="p-th-rate">{rateLabel}</th>
+              <th className="p-th-amt">{amtLabel}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => (
+              <tr key={row.id}>
+                <td className="p-td-sno">{i + 1}</td>
+                <td className="p-td-desc">{row.description}</td>
+                <td className="p-td-qty">{row.quantity}</td>
+                <td className="p-td-rate">{row.rate}</td>
+                <td className="p-td-amt">₹{((Number(row.quantity) || 0) * (Number(row.rate) || 0)).toLocaleString()}</td>
+              </tr>
+            ))}
+            {rows.length < 5 && Array.from({ length: 5 - rows.length }).map((_, i) => (
+              <tr key={`filler-${i}`}>
+                <td className="p-td-sno" style={{ color: 'transparent' }}>·</td>
+                <td className="p-td-desc" style={{ color: 'transparent' }}>·</td>
+                <td /><td /><td />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Totals */}
+        <div className="p-totals">
+          <div className="p-grand-row">
+            <span className="p-grand-lbl">Grand Total</span>
+            <span className="p-grand-val">₹{totalAmount.toLocaleString()}</span>
+          </div>
+          <div className="p-adv-row">
+            <span className="p-adv-lbl">{advanceLabel}</span>
+            <span className="p-adv-val">₹{Number(advanceInput).toLocaleString()}</span>
+          </div>
+          <div className="p-bal-card">
+            <span className="p-bal-lbl">Balance Due</span>
+            <span className="p-bal-val">₹{balance.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Flexible spacer pushes footer to bottom */}
+        <div className="p-spacer" />
+
+        {/* Footer */}
+        <div className="p-footer">
+          <div className="p-bank-col">
+            <div className="p-bank-micro">Bank Info</div>
+            <div className="p-bank-name">{bankName}</div>
+            <div className="p-bank-acc">{accName}</div>
+            <div className="p-bank-no">A/C: {accNo}</div>
+          </div>
+          {qrCode && (
+            <div className="p-qr-col">
+              <img src={qrCode} alt="QR Code" className="p-qr-img" />
+              <span className="p-qr-lbl">Scan to Pay</span>
+            </div>
+          )}
+          <div className="p-sign-col">
+            <div className="p-sign-line" />
+            <span className="p-sign-lbl">Authorized Sign</span>
+          </div>
+        </div>
+
+        {/* Bottom Strip */}
+        <div className="p-strip">
+          <div className="p-strip-note">*Please verify drawings and dimensions before execution.</div>
+          <div className="p-strip-thanks">Thank you for choosing {companyName}</div>
+        </div>
+
+      </div>
     </div>
   );
 };
