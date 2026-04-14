@@ -50,15 +50,13 @@ const PaymentTracker: React.FC = () => {
     Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
     if (logo) localStorage.setItem('p_logo', logo);
     if (qrCode) localStorage.setItem('p_qr', qrCode);
-  }, [logo, qrCode, invoiceLabel, advanceLabel, snoLabel, qtyLabel, rateLabel, amtLabel,
-    companyName, engineerName, address, clientName, invoiceNo, invoiceDate,
-    advanceInput, rows, bankName, accName, accNo]);
+  }, [logo, qrCode, invoiceLabel, advanceLabel, snoLabel, qtyLabel, rateLabel, amtLabel, companyName, engineerName, address, clientName, invoiceNo, invoiceDate, advanceInput, rows, bankName, accName, accNo]);
 
   const logoRef = useRef<HTMLInputElement>(null);
   const qrRef = useRef<HTMLInputElement>(null);
 
   const handleReset = () => {
-    if (window.confirm('Invoice data reset panna ok-va?')) {
+    if (window.confirm("Invoice data reset panna ok-va?")) {
       localStorage.clear();
       window.location.reload();
     }
@@ -75,20 +73,15 @@ const PaymentTracker: React.FC = () => {
 
   const updateRow = useCallback((id: number, field: keyof PaymentRow, value: string) => {
     setRows(prev => prev.map(row =>
-      row.id === id
-        ? { ...row, [field]: (field === 'quantity' || field === 'rate') ? (value === '' ? '' : parseFloat(value) || '') : value }
-        : row
+      row.id === id ? { ...row, [field]: (field === 'quantity' || field === 'rate') ? (value === '' ? '' : parseFloat(value) || '') : value } : row
     ));
   }, []);
 
-  const totalAmount = useMemo(() =>
-    rows.reduce((s, r) => s + ((Number(r.quantity) || 0) * (Number(r.rate) || 0)), 0),
-    [rows]
-  );
+  const totalAmount = useMemo(() => rows.reduce((s, r) => s + ((Number(r.quantity) || 0) * (Number(r.rate) || 0)), 0), [rows]);
   const balance = totalAmount - (Number(advanceInput) || 0);
 
   const onShare = async () => {
-    const text = `*Invoice: ${companyName}*\nInvoice No: ${invoiceNo}\nTotal: ₹${totalAmount.toLocaleString()}\nAdvance: ₹${Number(advanceInput).toLocaleString()}\nBalance Due: ₹${balance.toLocaleString()}`;
+    const text = `*Invoice: ${companyName}*\nTotal: ₹${totalAmount.toLocaleString()}\nBalance: ₹${balance.toLocaleString()}`;
     if (navigator.share) await navigator.share({ title: 'Invoice', text });
     else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -102,110 +95,122 @@ const PaymentTracker: React.FC = () => {
   };
 
   return (
-    <div id="app-root">
+    <div style={{ margin: 0, padding: 0, background: '#f1f5f9', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; overflow-x: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
-
-        /* ── SCREEN ── */
-        #app-root { background: #e2e8f0; min-height: 100vh; padding-bottom: 32px; }
-        .screen-card { width: 100%; max-width: 480px; margin: 0 auto; background: #fff; box-shadow: 0 8px 40px rgba(0,0,0,0.13); }
-        @media (min-width: 500px) {
-          #app-root { padding: 24px 0 48px; }
-          .screen-card { border-radius: 18px; overflow: hidden; }
-        }
-
-        .inv-top-band {
-          background: #ffffff;
-          padding: 18px 18px 14px;
-          display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
-        }
-        .inv-top-left { flex: 1; min-width: 0; }
-        .logo-btn {
-          width: 88px; height: 52px; background: #f8fafc;
-          border: 2px dashed #e2e8f0; border-radius: 10px;
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          cursor: pointer; margin-bottom: 10px; overflow: hidden;
-        }
-        .logo-btn img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
-        .co-name { font-size: 20px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em; background: transparent; border: none; outline: none; width: 100%; display: block; line-height: 1.15; }
-        .co-sub { font-size: 9.5px; font-weight: 600; color: #64748b; background: transparent; border: none; outline: none; width: 100%; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        
-        .inv-right-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-        .inv-label-input { font-size: 14px; font-weight: 900; color: #0f172a; letter-spacing: 0.1em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 100px; }
-        .logo-box-right {
-          width: 120px; height: 65px; background: #f8fafc;
-          border: 1.5px solid #e2e8f0; border-radius: 8px;
-          display: flex; flex-direction: column; align-items: center; justify-content: center;
-          cursor: pointer; overflow: hidden; position: relative;
-        }
-        .logo-box-right img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
-
-        .bill-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1.5px solid #0f172a; border-bottom: 2px solid #0f172a; }
-        .bill-to-cell { padding: 10px 14px; border-right: 2px solid #0f172a; background: #f8fafc; }
-        .bill-details-cell { padding: 10px 14px; }
-        .cell-micro { font-size: 8.5px; font-weight: 900; color: #2563eb; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 5px; }
-        .client-inp { font-size: 14px; font-weight: 800; color: #0f172a; background: transparent; border: none; outline: none; width: 100%; }
-        .det-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .det-lbl { font-size: 8.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
-        .det-val { font-size: 10px; font-weight: 900; color: #0f172a; background: transparent; border: none; outline: none; text-align: right; }
-
-        .inv-table { width: 100%; border-collapse: collapse; }
-        .inv-table thead tr { background: #0f172a; }
-        .inv-table th { padding: 9px 5px; font-size: 8.5px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: 0.06em; }
-        .inv-table th input { background: transparent; color: white; border: none; outline: none; font-weight: 900; font-size: 8.5px; text-transform: uppercase; width: 100%; text-align: center; }
-        .inv-table tbody tr { border-bottom: 1px solid #f1f5f9; }
-        .inv-table td { padding: 10px 5px; font-size: 11px; }
-        .inv-table td input { border: none; outline: none; background: transparent; font-size: 11px; width: 100%; }
-        .th-sno { width: 30px; text-align: center; }
-        .th-desc { text-align: left; padding-left: 10px !important; }
-        .th-amt { width: 68px; text-align: right; padding-right: 10px !important; }
-        .td-amt { text-align: right; font-weight: 900; padding-right: 10px !important; color: #0f172a; }
-        .add-row-btn { display: flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 9.5px; font-weight: 900; color: #2563eb; text-transform: uppercase; background: none; border: none; cursor: pointer; }
-
-        .totals-wrap { padding: 14px 16px 12px; background: #f8fafc; }
-        .grand-total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 10px; }
-        .gt-value { font-size: 20px; font-weight: 900; color: #0f172a; }
-        .advance-pill { display: flex; justify-content: space-between; align-items: center; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 10px 16px; margin-bottom: 10px; }
-        .adv-val-inp { font-size: 20px; font-weight: 900; color: #059669; background: transparent; border: none; outline: none; text-align: right; width: 90px; }
-        .balance-card { background: #0f172a; border-radius: 14px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .bal-val { font-size: 30px; font-weight: 900; color: #fff; }
-
-        .inv-footer { padding: 14px 16px 16px; border-top: 1.5px solid #e2e8f0; }
-        .footer-cols { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .bank-col { flex: 1; }
-        .bank-nm { font-size: 12px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
-        .qr-col { display: flex; flex-direction: row; align-items: center; gap: 10px; }
-        .qr-box { width: 60px; height: 60px; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
-        .qr-box img { width: 100%; height: 100%; object-fit: cover; }
-        .thanks-text { font-size: 11px; font-weight: 900; color: #0f172a; text-transform: uppercase; width: 130px; line-height: 1.2; }
-
-        .action-bar { padding: 12px 16px 20px; background: #f1f5f9; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
-        .action-row { display: flex; gap: 10px; }
-        .btn { border: none; cursor: pointer; font-weight: 900; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 13px; padding: 14px 10px; }
-        .btn-print { flex: 1; background: #0f172a; color: white; }
-        .btn-share { flex: 1; background: #10b981; color: white; }
-        .btn-reset { width: 100%; background: white; color: #ef4444; border: 1.5px solid #fecaca !important; }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
 
         @media print {
           @page { size: A4 portrait; margin: 0; }
-          html, body { width: 210mm; height: 297mm; overflow: hidden; background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          #app-root { background: white !important; padding: 0 !important; }
-          .screen-card { width: 100% !important; max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; transform: scale(0.98); transform-origin: top center; }
+          body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden !important; }
           .no-print { display: none !important; }
+          .print-show { display: block !important; }
+          .invoice-card {
+            width: 210mm !important; 
+            height: 297mm !important; 
+            margin: 0 !important; 
+            padding: 10mm !important;
+            border-radius: 0 !important;
+            box-shadow: none !important; 
+            border: none !important;
+            transform: scale(1);
+            transform-origin: top center;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          .inv-footer { margin-top: auto !important; padding-bottom: 5mm !important; }
         }
+
+        .invoice-card {
+          width: 100%;
+          max-width: 520px;
+          margin: 0 auto;
+          background: white;
+          box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+          position: relative;
+        }
+
+        @media (min-width: 640px) {
+          .invoice-card {
+            margin: 24px auto;
+            border-radius: 20px;
+            overflow: hidden;
+          }
+        }
+
+        .inv-header { padding: 16px 16px 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; background: #ffffff; }
+        .inv-header-left { flex: 1; min-width: 0; }
+        .logo-upload { width: 90px; height: 56px; background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 8px; overflow: hidden; }
+        .logo-upload img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+        .company-name-input { display: block; width: 100%; font-size: 18px; font-weight: 900; text-transform: uppercase; color: #0f172a; border: none; outline: none; background: transparent; line-height: 1.2; }
+        .sub-input { display: block; width: 100%; font-size: 10px; font-weight: 700; color: #64748b; border: none; outline: none; background: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        
+        .inv-right-block { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .invoice-label-input { font-size: 14px; font-weight: 900; color: #0f172a; letter-spacing: 0.1em; text-transform: uppercase; background: transparent; border: none; outline: none; text-align: right; width: 100px; }
+        .logo-box-right { width: 120px; height: 65px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; }
+        .logo-box-right img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+
+        .bill-info { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; }
+        .bill-to { padding: 10px 12px; border-right: 2px solid #0f172a; background: #f8fafc; }
+        .bill-details { padding: 10px 12px; }
+        .bill-label { font-size: 9px; font-weight: 900; color: #2563eb; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+        .inv-details-label { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+        .inv-details-value { font-size: 10px; font-weight: 900; color: #0f172a; border: none; outline: none; background: transparent; text-align: right; width: 100%; }
+        .inv-details-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .client-input { width: 100%; font-size: 14px; font-weight: 700; color: #0f172a; border: none; outline: none; background: transparent; }
+
+        .inv-table { width: 100%; border-collapse: collapse; }
+        .inv-table thead tr { background: #0f172a; color: white; }
+        .inv-table th { padding: 8px 4px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
+        .inv-table th input { background: transparent; color: white; border: none; outline: none; font-weight: 900; font-size: 8.5px; text-transform: uppercase; width: 100%; text-align: center; }
+        .inv-table td { padding: 10px 4px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .inv-table td input { border: none; outline: none; background: transparent; font-size: 11px; width: 100%; }
+        .col-sno { width: 28px; text-align: center; }
+        .col-qty { width: 42px; text-align: center; }
+        .col-rate { width: 44px; text-align: center; }
+        .col-amt { width: 64px; text-align: right; padding-right: 8px !important; }
+        .add-item-btn { padding: 10px 12px; color: #2563eb; font-weight: 900; font-size: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; letter-spacing: 0.05em; }
+
+        .totals-section { padding: 14px 16px; background: #f8fafc; }
+        .grand-total-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 10px; }
+        .gt-label { font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.12em; }
+        .gt-value { font-size: 20px; font-weight: 900; color: #0f172a; }
+        .advance-box { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 10px; }
+        .adv-label-input { font-size: 10px; font-weight: 900; color: #10b981; background: transparent; border: none; outline: none; text-transform: uppercase; width: 130px; }
+        .adv-value-wrap { display: flex; align-items: center; gap: 2px; }
+        .adv-value-input { font-size: 18px; font-weight: 900; color: #10b981; background: transparent; border: none; outline: none; text-align: right; width: 80px; }
+        .balance-box { background: #0f172a; color: white; padding: 16px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(15,23,42,0.3); }
+        .bal-label { font-size: 10px; font-weight: 900; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.12em; }
+        .bal-value { font-size: 28px; font-weight: 900; font-family: monospace; }
+
+        .inv-footer { padding: 16px; border-top: 1px solid #f1f5f9; }
+        .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .bank-label { font-size: 9px; font-weight: 900; color: #2563eb; text-transform: uppercase; display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+        .bank-input { display: block; width: 100%; border: none; outline: none; background: transparent; font-size: 10px; }
+        .bank-name { font-size: 11px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+        .qr-box { width: 60px; height: 60px; background: #f8fafc; border: 1.5px dashed #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+        .qr-box img { width: 100%; height: 100%; object-fit: cover; }
+        .thanks-text { font-size: 11px; font-weight: 900; color: #0f172a; text-transform: uppercase; width: 130px; line-height: 1.2; text-align: right; }
+
+        .action-bar { padding: 12px 16px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px; }
+        .action-row { display: flex; gap: 10px; }
+        .btn-print, .btn-share { flex: 1; color: white; padding: 14px 8px; border-radius: 14px; font-weight: 900; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; }
+        .btn-print { background: #0f172a; } .btn-share { background: #10b981; }
+        .btn-reset { width: 100%; background: white; color: #ef4444; padding: 12px; border-radius: 14px; font-weight: 900; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #fee2e2; cursor: pointer; }
+        .footer-brand { text-align: center; padding: 16px 0 24px; font-size: 8px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.4em; }
       `}</style>
 
-      <div className="screen-card">
+      <div className="invoice-card">
         {/* HEADER */}
-        <div className="inv-top-band">
-          <div className="inv-top-left">
-            <input className="co-name" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-            <input className="co-sub" value={engineerName} onChange={e => setEngineerName(e.target.value)} />
-            <input className="co-sub" value={address} onChange={e => setAddress(e.target.value)} />
+        <div className="inv-header">
+          <div className="inv-header-left">
+            <input className="company-name-input" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+            <input className="sub-input" value={engineerName} onChange={e => setEngineerName(e.target.value)} />
+            <input className="sub-input" value={address} onChange={e => setAddress(e.target.value)} />
           </div>
           <div className="inv-right-block">
-            <input className="inv-label-input" value={invoiceLabel} onChange={e => setInvoiceLabel(e.target.value)} />
+            <input className="invoice-label-input" value={invoiceLabel} onChange={e => setInvoiceLabel(e.target.value)} />
             <div className="logo-box-right no-print" onClick={() => logoRef.current?.click()}>
               {logo ? <img src={logo} alt="Logo" /> : <><Camera size={14} color="#cbd5e1" /><span style={{ fontSize: 7, color: '#cbd5e1', fontWeight: 800 }}>LOGO</span></>}
               <input type="file" ref={logoRef} hidden accept="image/*" onChange={e => handleImage(e, setLogo)} />
@@ -215,19 +220,19 @@ const PaymentTracker: React.FC = () => {
         </div>
 
         {/* BILL INFO */}
-        <div className="bill-row">
-          <div className="bill-to-cell">
-            <p className="cell-micro">Bill To</p>
-            <input className="client-inp" value={clientName} onChange={e => setClientName(e.target.value)} />
+        <div className="bill-info">
+          <div className="bill-to">
+            <p className="bill-label">BILL TO</p>
+            <input className="client-input" value={clientName} onChange={e => setClientName(e.target.value)} />
           </div>
-          <div className="bill-details-cell">
-            <div className="det-row">
-              <span className="det-lbl">Invoice No:</span>
-              <input className="det-val" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} style={{ width: 80 }} />
+          <div className="bill-details">
+            <div className="inv-details-row">
+              <span className="inv-details-label">INVOICE NO:</span>
+              <input className="inv-details-value" value={invoiceNo} onChange={e => setInvoiceNo(e.target.value)} style={{ width: 80 }} />
             </div>
-            <div className="det-row">
-              <span className="det-lbl">Date:</span>
-              <input type="date" className="det-val" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} style={{ width: 100, fontSize: 9 }} />
+            <div className="inv-details-row">
+              <span className="inv-details-label">DATE:</span>
+              <input type="date" className="inv-details-value" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} style={{ width: 100, fontSize: 9 }} />
             </div>
           </div>
         </div>
@@ -237,18 +242,18 @@ const PaymentTracker: React.FC = () => {
           <table className="inv-table">
             <thead>
               <tr>
-                <th className="th-sno"><input value={snoLabel} onChange={e => setSnoLabel(e.target.value)} /></th>
-                <th className="th-desc">DESCRIPTION</th>
-                <th className="th-qty"><input value={qtyLabel} onChange={e => setQtyLabel(e.target.value)} /></th>
-                <th className="th-rate"><input value={rateLabel} onChange={e => setRateLabel(e.target.value)} /></th>
-                <th className="th-amt"><input value={amtLabel} onChange={e => setAmtLabel(e.target.value)} style={{ textAlign: 'right', color: 'white' }} /></th>
+                <th className="col-sno"><input value={snoLabel} onChange={e => setSnoLabel(e.target.value)} /></th>
+                <th style={{ textAlign: 'left', paddingLeft: 8 }}>DESCRIPTION</th>
+                <th className="col-qty"><input value={qtyLabel} onChange={e => setQtyLabel(e.target.value)} /></th>
+                <th className="col-rate"><input value={rateLabel} onChange={e => setRateLabel(e.target.value)} /></th>
+                <th className="col-amt"><input value={amtLabel} onChange={e => setAmtLabel(e.target.value)} style={{ textAlign: 'right', color: 'white' }} /></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
                 <tr key={row.id}>
                   <td style={{ textAlign: 'center', color: '#cbd5e1', fontWeight: 800 }}>{i + 1}</td>
-                  <td className="td-desc"><input style={{ fontWeight: 700, color: '#334155' }} value={row.description} onChange={e => updateRow(row.id, 'description', e.target.value)} /></td>
+                  <td style={{ paddingLeft: 8 }}><input style={{ fontWeight: 700, color: '#334155' }} value={row.description} onChange={e => updateRow(row.id, 'description', e.target.value)} /></td>
                   <td style={{ textAlign: 'center' }}><input style={{ textAlign: 'center' }} value={row.quantity} onChange={e => updateRow(row.id, 'quantity', e.target.value)} /></td>
                   <td style={{ textAlign: 'center' }}><input style={{ textAlign: 'center', fontWeight: 700, color: '#2563eb' }} value={row.rate} onChange={e => updateRow(row.id, 'rate', e.target.value)} /></td>
                   <td className="td-amt">₹{((Number(row.quantity) || 0) * (Number(row.rate) || 0)).toLocaleString()}</td>
@@ -256,38 +261,38 @@ const PaymentTracker: React.FC = () => {
               ))}
             </tbody>
           </table>
-          <button className="add-row-btn no-print" onClick={() => setRows([...rows, { id: Date.now(), description: '', quantity: '', rate: '' }])}>
-            <Plus size={13} /> Add Line Item
+          <button className="add-item-btn no-print" onClick={() => setRows([...rows, { id: Date.now(), description: '', quantity: '', rate: '' }])}>
+            <Plus size={13} /> ADD LINE ITEM
           </button>
         </div>
 
         {/* TOTALS */}
-        <div className="totals-wrap">
+        <div className="totals-section">
           <div className="grand-total-row">
-            <span className="total-line-lbl">Grand Total</span>
+            <span className="gt-label">Grand Total</span>
             <span className="gt-value">₹{totalAmount.toLocaleString()}</span>
           </div>
-          <div className="advance-pill">
-            <input className="adv-lbl-inp" value={advanceLabel} onChange={e => setAdvanceLabel(e.target.value)} />
-            <div className="adv-val-wrap">
-              <span className="adv-symbol">₹</span>
-              <input className="adv-val-inp" value={advanceInput} onChange={e => setAdvanceInput(e.target.value)} />
+          <div className="advance-box">
+            <input className="adv-label-input" value={advanceLabel} onChange={e => setAdvanceLabel(e.target.value)} />
+            <div className="adv-value-wrap">
+              <span style={{ color: '#10b981', fontSize: 10 }}>₹</span>
+              <input className="adv-value-input" value={advanceInput} onChange={e => setAdvanceInput(e.target.value)} />
             </div>
           </div>
-          <div className="balance-card">
-            <span className="bal-lbl" style={{ color: 'rgba(255,255,255,0.5)' }}>Balance Due</span>
+          <div className="balance-box">
+            <span className="bal-label" style={{ color: 'rgba(255,255,255,0.5)' }}>Balance Due</span>
             <span className="bal-val">₹{balance.toLocaleString()}</span>
           </div>
         </div>
 
         {/* FOOTER */}
         <div className="inv-footer">
-          <div className="footer-cols">
-            <div className="bank-col">
-              <p className="bank-micro"><Landmark size={9} /> Bank Info</p>
-              <input className="bank-inp bank-nm" value={bankName} onChange={e => setBankName(e.target.value)} />
-              <input className="bank-inp bank-an" value={accName} onChange={e => setAccName(e.target.value)} />
-              <input className="bank-inp bank-no" value={accNo} onChange={e => setAccNo(e.target.value)} />
+          <div className="footer-top">
+            <div style={{ flex: 1 }}>
+              <p className="bank-label"><Landmark size={10} /> Bank Info</p>
+              <input className="bank-input bank-name" value={bankName} onChange={e => setBankName(e.target.value)} />
+              <input className="bank-input" style={{ fontWeight: 700, color: '#64748b' }} value={accName} onChange={e => setAccName(e.target.value)} />
+              <input className="bank-input" style={{ color: '#94a3b8', fontFamily: 'monospace' }} value={accNo} onChange={e => setAccNo(e.target.value)} />
             </div>
             <div className="qr-col">
               <div className="qr-box no-print" onClick={() => qrRef.current?.click()}>
@@ -301,15 +306,16 @@ const PaymentTracker: React.FC = () => {
           <p className="footer-note" style={{ textAlign: 'center' }}>*Please verify drawings and dimensions before execution.</p>
         </div>
 
-        {/* ACTION BUTTONS */}
+        {/* ACTIONS */}
         <div className="action-bar no-print">
           <div className="action-row">
-            <button className="btn btn-print" onClick={() => window.print()}><Download size={15} /> Print PDF</button>
-            <button className="btn btn-share" onClick={onShare}><Share2 size={15} /> Share</button>
+            <button className="btn-print" onClick={() => window.print()}><Download size={16} /> PRINT PDF</button>
+            <button className="btn-share" onClick={onShare}><Share2 size={16} /> SHARE</button>
           </div>
-          <button className="btn btn-reset" onClick={handleReset}><RotateCcw size={15} /> Reset</button>
+          <button className="btn-reset" onClick={handleReset}><RotateCcw size={16} /> RESET</button>
         </div>
       </div>
+      <p className="footer-brand no-print">Uniq Designs AI Terminal</p>
     </div>
   );
 };
